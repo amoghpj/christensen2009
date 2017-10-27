@@ -15,11 +15,14 @@ def Transition(PrevState):
                'GAL11':True,
                'GAL80':True
     }
+    NutrientInputs=['glucose_ext','galactose_ext','maltose_ext']
+    for N in NutrientInputs:
+        NextState[N]=PrevState[N]
     # Nutrients and metabolites
     NextState['galactose_int'] = PrevState['galactose_ext'] and PrevState['Gal2p']
     NextState['maltose_int'] = ( PrevState['maltose_ext'] and ( ( ( PrevState['MalTp'] ) ) )    )
  
-     #Regulatory genes
+    # Regulatory genes
     NextState['CAT8'] =  not ( (PrevState['Mig1p']) )
     NextState['GAL1'] = ( (PrevState['Gal4p']) and not ( PrevState['Mig1p'] ) ) 
     NextState['GAL3'] =  not ( (PrevState['Mig1p']) )
@@ -32,18 +35,18 @@ def Transition(PrevState):
     NextState['SNF3']= not (PrevState['Mig1p']) and not (PrevState['Mig2p'])  # Added 
     NextState['Yck1p'] = (PrevState['YCK1_2'] ) 
  
-     # Output
+    # Output
     NextState['ACS1'] =(PrevState['Cat8p']) 
     NextState['FBP1'] =(PrevState['Cat8p'])  or(PrevState['Sip4p']) 
     NextState['GAL10'] =(PrevState['Gal4p']) 
     NextState['GAL5'] =(PrevState['Gal4p']) 
     NextState['GAL7'] =(PrevState['Gal4p']) 
-    NextState['HXT1'] =  not ( (PrevState['Rgt1p'] and ( ( (PrevState['Mth1p']  or PrevState['Std1p'])))))
+    NextState['HXT1'] =  not ((PrevState['Rgt1p'] and (((PrevState['Mth1p']  or PrevState['Std1p'])))))
     NextState['HXT2'] =  not ((PrevState['Rgt1p'])  or(PrevState['Mig1p']) )
     NextState['HXT3'] =  not ((PrevState['Rgt1p'] and (((PrevState['Mth1p'])))))
-    NextState['HXT4'] =  not ((PrevState['Mig1p'])  or ( PrevState['Rgt1p'] and (((PrevState['Mth1p']) ) )    ) )
-    NextState['HXT5'] =  not ((PrevState['Rgt1p']) )
-    NextState['HXT8'] =  not ((PrevState['Rgt1p']) )
+    NextState['HXT4'] =  not ((PrevState['Mig1p'])  or ( PrevState['Rgt1p'] and (((PrevState['Mth1p'])))))
+    NextState['HXT5'] =  not ((PrevState['Rgt1p']))
+    NextState['HXT8'] =  not ((PrevState['Rgt1p']))
     NextState['ICL1'] =(PrevState['Cat8p'])  or(PrevState['Sip4p']) 
     NextState['IDP2'] =(PrevState['Cat8p']) 
     NextState['JEN1'] =(PrevState['Cat8p']) 
@@ -55,7 +58,7 @@ def Transition(PrevState):
     NextState['SFC1'] =(PrevState['Cat8p']) 
     NextState['SUC2'] =  not ((PrevState['Mig1p'])  or(PrevState['Mig2p']) )
     NextState['CAT2'] =(PrevState['Cat8p'])
-    NextState['4orFs'] =  not ((PrevState['RGT1']) )
+    NextState['4orfs'] =  not ((PrevState['RGT1']) )
  
      # Proteins
     NextState['Cat8p'] = (PrevState['CAT8'] and ( ( (PrevState['Snf1p']) ) )   ) 
@@ -157,4 +160,25 @@ InitialValues={'glucose_ext':False,
                'Cat8p':False,
                'Sip4p':False,
         }
+def LSS(Initial,NumIter,TransFunc):
+    States={'glucose_ext':[],'galactose_ext':[],'maltose_ext':[],'galactose_int':[],'maltose_int':[],'SNF3':[],'RGT2':[],'YCK1_2':[],'GRR1':[],'MTH1':[],'STD1':[],'RGT1':[],'GLC7':[],'REG1':[],'SNF1':[],'SNF4':[],'MIG1':[],'MIG2':[],'MIG3':[],'MALR':[],'MALT':[],'GAL1':[],'GAL2':[],'GAL3':[],'GAL4':[],'GAL11':[],'GAL80':[],'CAT8':[],'SIP4':[],'SUC2':[],'HXT1':[],'HXT2':[],'HXT3':[],'HXT4':[],'HXT5':[],'HXT8':[],'4orfs':[],'MALS':[],'GAL5':[],'GAL7':[],'GAL10':[],'MEL1':[],'ICL1':[],'FBP1':[],'PCK1':[],'MLS1':[],'MDH2':[],'ACS1':[],'SFC1':[],'CAT2':[],'IDP2':[],'JEN1':[],'Snf3p':[],'Rgt2p':[],'Yck1p':[],'SCF_grr1':[],'Mth1p':[],'Std1p':[],'Rgt1p':[],'Glc7Reg1':[],'Snf1p':[],'Mig1p':[],'Mig2p':[],'Mig3p':[],'MalRp':[],'MalTp':[],'Gal1p':[],'Gal2p':[],'Gal3p':[],'Gal4p':[],'Gal11p':[],'Gal80p':[],'Cat8p':[],'Sip4p':[]}
+    
+    print('Initializing State Tracker...')
+    for k in States.keys():
+        States[k].append(Initial[k])
+    print('Successfully initialized State Tracker.') 
+
+    CurrentState=Initial
+    NextState={}
+
+    for i in range(0,NumIter):
+        NextState=TransFunc(CurrentState)
+        for k in States.keys():
+            States[k].append(NextState[k])
+        CurrentState=NextState
+
+    return States
+
 T1=Transition(InitialValues)
+
+State5=LSS(InitialValues,5,Transition)
