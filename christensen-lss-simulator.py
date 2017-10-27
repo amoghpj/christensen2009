@@ -1,0 +1,160 @@
+def Transition(PrevState):
+    #PrevState['
+    NextState={'RGT2':True,
+               'YCK1_2':True,
+               'GRR1':True,
+               'STD1':True,
+               'RGT1':True,
+               'GLC7':True,
+               'REG1':True,
+               'SNF1':True,
+               'SNF4':True,
+               'MIG1':True,
+               'MALT':True,
+               'GAL2':True,
+               'GAL11':True,
+               'GAL80':True
+    }
+    # Nutrients and metabolites
+    NextState['galactose_int'] = PrevState['galactose_ext'] and PrevState['Gal2p']
+    NextState['maltose_int'] = ( PrevState['maltose_ext'] and ( ( ( PrevState['MalTp'] ) ) )    )
+ 
+     #Regulatory genes
+    NextState['CAT8'] =  not ( (PrevState['Mig1p']) )
+    NextState['GAL1'] = ( (PrevState['Gal4p']) and not ( PrevState['Mig1p'] ) ) 
+    NextState['GAL3'] =  not ( (PrevState['Mig1p']) )
+    NextState['GAL4'] =  not ( (PrevState['Mig1p']) )
+    NextState['MALR'] =  not ( (PrevState['Mig1p']) )
+    NextState['MIG2'] =  not ( (PrevState['Rgt1p']) )
+    NextState['MIG3'] =  not ( (PrevState['Rgt1p']) )
+    NextState['MTH1'] =  not ( (PrevState['Mig1p'] and ( ( ( PrevState['Mig2p']) ) )    ) )
+    NextState['SIP4'] = (PrevState['Cat8p']) 
+    NextState['SNF3']= not (PrevState['Mig1p']) and not (PrevState['Mig2p'])  # Added 
+    NextState['Yck1p'] = (PrevState['YCK1_2'] ) 
+ 
+     # Output
+    NextState['ACS1'] =(PrevState['Cat8p']) 
+    NextState['FBP1'] =(PrevState['Cat8p'])  or(PrevState['Sip4p']) 
+    NextState['GAL10'] =(PrevState['Gal4p']) 
+    NextState['GAL5'] =(PrevState['Gal4p']) 
+    NextState['GAL7'] =(PrevState['Gal4p']) 
+    NextState['HXT1'] =  not ( (PrevState['Rgt1p'] and ( ( (PrevState['Mth1p']  or PrevState['Std1p'])))))
+    NextState['HXT2'] =  not ((PrevState['Rgt1p'])  or(PrevState['Mig1p']) )
+    NextState['HXT3'] =  not ((PrevState['Rgt1p'] and (((PrevState['Mth1p'])))))
+    NextState['HXT4'] =  not ((PrevState['Mig1p'])  or ( PrevState['Rgt1p'] and (((PrevState['Mth1p']) ) )    ) )
+    NextState['HXT5'] =  not ((PrevState['Rgt1p']) )
+    NextState['HXT8'] =  not ((PrevState['Rgt1p']) )
+    NextState['ICL1'] =(PrevState['Cat8p'])  or(PrevState['Sip4p']) 
+    NextState['IDP2'] =(PrevState['Cat8p']) 
+    NextState['JEN1'] =(PrevState['Cat8p']) 
+    NextState['MALS'] = ( (PrevState['MalRp']) and not (PrevState['Mig1p']) ) 
+    NextState['MDH2'] =(PrevState['Cat8p'])  or(PrevState['Sip4p']) 
+    NextState['MEL1'] = ((PrevState['Gal4p'])  ) or  not ( PrevState['Mig1p'] or PrevState['Gal4p'] ) 
+    NextState['MLS1'] =(PrevState['Cat8p'])  or(PrevState['Sip4p']) 
+    NextState['PCK1'] =(PrevState['Cat8p']) 
+    NextState['SFC1'] =(PrevState['Cat8p']) 
+    NextState['SUC2'] =  not ((PrevState['Mig1p'])  or(PrevState['Mig2p']) )
+    NextState['CAT2'] =(PrevState['Cat8p'])
+    NextState['4orFs'] =  not ((PrevState['RGT1']) )
+ 
+     # Proteins
+    NextState['Cat8p'] = (PrevState['CAT8'] and ( ( (PrevState['Snf1p']) ) )   ) 
+    NextState['Gal11p'] = (PrevState['GAL11']) 
+    NextState['Gal1p'] = (PrevState['GAL1']) 
+    NextState['Gal2p'] = (PrevState['GAL2']) 
+    NextState['Gal3p'] = (PrevState['GAL3'] and ( ( (PrevState['galactose_int']) ) )   ) 
+    NextState['Gal4p'] = ( (PrevState['GAL4']) and not (PrevState['Gal80p']) ) 
+    NextState['Gal80p'] = ( ( (PrevState['GAL80']) and not (PrevState['Gal1p'])  ) and not (PrevState['Gal3p']) ) 
+    NextState['Glc7Reg1'] = (PrevState['GLC7'] and ( ( (PrevState['REG1'] and PrevState['glucose_ext'] ) ) )   ) 
+    NextState['MalRp'] = (PrevState['MALR']and ( ( (PrevState['maltose_int']) ) )   ) 
+    NextState['MalTp'] = (PrevState['MALT']) 
+    NextState['Mig1p'] = ( (PrevState['MIG1']) and not (PrevState['Snf1p']) ) 
+    NextState['Mig2p'] = (PrevState['MIG2']) 
+    NextState['Mig3p'] = ( (PrevState['MIG3']) and not (PrevState['Snf1p']) ) 
+    NextState['Mth1p'] = ( ( ( ( (PrevState['MTH1']) and not (PrevState['SCF_grr1'])  ) and not (PrevState['Rgt2p'])  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p']) ) 
+    NextState['Rgt1p'] = (PrevState['RGT1'] and ( ( (PrevState['Mth1p'] or PrevState['Std1p']) ) )   ) 
+    NextState['Rgt2p'] = (PrevState['glucose_ext'] and ( ( (PrevState['RGT2'])))) 
+    NextState['SCF_grr1'] = (PrevState['GRR1']) 
+    NextState['Sip4p'] = (PrevState['SIP4'] and ( ( (PrevState['Snf1p']) ) )   ) 
+    NextState['Snf1p'] = ( (PrevState['SNF1'] and ( ( (PrevState['SNF4']) ) )    ) and not (PrevState['Glc7Reg1'])) 
+    NextState['Snf3p'] = (PrevState['glucose_ext'] and ( ( (PrevState['SNF3'])))) 
+    NextState['Std1p'] = ( ( ( ( (PrevState['STD1']) and not (PrevState['Rgt2p'])) and not (PrevState['SCF_grr1'] )  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p'] ) )
+    return NextState
+
+
+InitialValues={'glucose_ext':False,
+               'galactose_ext':False,
+               'maltose_ext':False,
+               'galactose_int':False,
+               'maltose_int':False,
+               'SNF3':False,
+               'RGT2':True,
+               'YCK1_2':True,
+               'GRR1':True,
+               'MTH1':False,
+               'STD1':True,
+               'RGT1':True,
+               'GLC7':True,
+               'REG1':True,
+               'SNF1':True,
+               'SNF4':True,
+               'MIG1':True,
+               'MIG2':False,
+               'MIG3':False,
+               'MALR':False,
+               'MALT':True,
+               'GAL1':False,
+               'GAL2':True,
+               'GAL3':False,
+               'GAL4':False,
+               'GAL11':True,
+               'GAL80':True,
+               'CAT8':False,
+               'SIP4':False,
+               'SUC2':False,
+               'HXT1':False,
+               'HXT2':False,
+               'HXT3':False,
+               'HXT4':False,
+               'HXT5':False,
+               'HXT8':False,
+               '4orfs':False,
+               'MALS':False,
+               'GAL5':False,
+               'GAL7':False,
+               'GAL10':False,
+               'MEL1':False,
+               'ICL1':False,
+               'FBP1':False,
+               'PCK1':False,
+               'MLS1':False,
+               'MDH2':False,
+               'ACS1':False,
+               'SFC1':False,
+               'CAT2':False,
+               'IDP2':False,
+               'JEN1':False,
+               'Snf3p':False,
+               'Rgt2p':False,
+               'Yck1p':False,
+               'SCF_grr1':False,
+               'Mth1p':False,
+               'Std1p':False,
+               'Rgt1p':False,
+               'Glc7Reg1':False,
+               'Snf1p':False,
+               'Mig1p':False,
+               'Mig2p':False,
+               'Mig3p':False,
+               'MalRp':False,
+               'MalTp':False,
+               'Gal1p':False,
+               'Gal2p':False,
+               'Gal3p':False,
+               'Gal4p':False,
+               'Gal11p':False,
+               'Gal80p':False,
+               'Cat8p':False,
+               'Sip4p':False,
+        }
+T1=Transition(InitialValues)
