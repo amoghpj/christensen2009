@@ -39,7 +39,7 @@ def Transition(PrevState):
     NextState['MIG3'] =  not ( (PrevState['Rgt1p']) )
     NextState['MTH1'] =  not ( (PrevState['Mig1p'] and ( ( ( PrevState['Mig2p']) ) )    ) )
     NextState['SIP4'] = (PrevState['Cat8p']) 
-    NextState['SNF3']= not (PrevState['Mig1p']) and not (PrevState['Mig2p'])  # Added 
+    NextState['SNF3']= not (PrevState['Mig1p']) or not (PrevState['Mig2p'])  # Added 
     NextState['Yck1p'] = (PrevState['YCK1_2'] ) 
  
     # Output
@@ -65,7 +65,7 @@ def Transition(PrevState):
     NextState['SFC1'] =(PrevState['Cat8p']) 
     NextState['SUC2'] =  not ((PrevState['Mig1p'])  or(PrevState['Mig2p']) )
     NextState['CAT2'] =(PrevState['Cat8p'])
-    NextState['4orfs'] =  not ((PrevState['RGT1']) )
+    NextState['4orfs'] = not ((PrevState['Rgt1p']) )
  
      # Proteins
     NextState['Cat8p'] = (PrevState['CAT8'] and ( ( (PrevState['Snf1p']) ) )   ) 
@@ -81,14 +81,14 @@ def Transition(PrevState):
     NextState['Mig1p'] = ( (PrevState['MIG1']) and not (PrevState['Snf1p']) ) 
     NextState['Mig2p'] = (PrevState['MIG2']) 
     NextState['Mig3p'] = ( (PrevState['MIG3']) and not (PrevState['Snf1p']) ) 
-    NextState['Mth1p'] = ( ( ( ( (PrevState['MTH1']) and not (PrevState['SCF_grr1'])  ) and not (PrevState['Rgt2p'])  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p']) ) 
+    NextState['Mth1p'] = (PrevState['MTH1'] and not PrevState['Yck1p'])  or (PrevState['MTH1'] and not PrevState['Rgt2p'] and not PrevState['Snf3p']) or (PrevState['MTH1'] and not PrevState['SCF_grr1']) #( ( ( ( (PrevState['MTH1']) and not (PrevState['SCF_grr1'])  ) and not (PrevState['Rgt2p'])  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p']) ) 
     NextState['Rgt1p'] = (PrevState['RGT1'] and ( ( (PrevState['Mth1p'] or PrevState['Std1p']) ) )   ) 
     NextState['Rgt2p'] = (PrevState['glucose_ext'] and ( ( (PrevState['RGT2'])))) 
     NextState['SCF_grr1'] = (PrevState['GRR1']) 
     NextState['Sip4p'] = (PrevState['SIP4'] and ( ( (PrevState['Snf1p']) ) )   ) 
     NextState['Snf1p'] = ( (PrevState['SNF1'] and ( ( (PrevState['SNF4']) ) )    ) and not (PrevState['Glc7Reg1'])) 
     NextState['Snf3p'] = (PrevState['glucose_ext'] and ( ( (PrevState['SNF3'])))) 
-    NextState['Std1p'] = ( ( ( ( (PrevState['STD1']) and not (PrevState['Rgt2p'])) and not (PrevState['SCF_grr1'] )  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p'] ) )
+    NextState['Std1p'] = (PrevState['STD1'] and not PrevState['Yck1p']) or (PrevState['STD1'] and not PrevState['SCF_grr1']) or (PrevState['STD1'] and not PrevState['Snf3p'] and not PrevState['Rgt2p'])#( ( ( ( (PrevState['STD1']) and not (PrevState['Rgt2p'])) and not (PrevState['SCF_grr1'] )  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p'] ) )
     return NextState
 
 def set_initial(modifier_dict):
@@ -207,7 +207,7 @@ def LSS(Initial,NumIter,TransFunc):
 
 
 NumIter=15
-StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition)
+#StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition)
 #plot_as_heatmap(StateTracker)
 
 
@@ -243,13 +243,36 @@ StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition)
 
 FixedRegulators=['RGT2','YCK1_2','GRR1','STD1','RGT1','GLC7','REG1','SNF1','SNF4','MIG1','MALT','GAL2','GAL11','GAL80']
 
+
+###############################################################
+###### Investigate wt-SS predictions for various nutrient inputs
+
 WTcomp=pd.read_csv(PATH+'/wt-responses.csv',sep='\t',index_col=0)
 
 WTcompdict=WTcomp.to_dict()
+MAP={'none':{},
+     'gal':{'galactose_ext':True},
+     'glc+mal':{'glucose_ext':True,
+                'maltose_ext':True},
+     'gal+ mal':{'galactose_ext':True,
+                 'maltose_ext':True},
+     'mal':{'maltose_ext':True},
+     'all':{'maltose_ext':True,
+            'galactose_ext':True,
+            'glucose_ext':True},
+     'glc':{'glucose_ext':True},
+     'glc + gal':{'glucose_ext':True,
+                  'galactose_ext':True}}
+mismatch={}
+nutrient_spec_SS={}
+for k in MAP.keys():
+    StateTracker=LSS(set_initial(MAP[k]),NumIter,Transition)
+    nutrient_spec_SS[k]=ss_extractor(StateTracker)
+    counter=0
+    mismatch[k]=[]
+    for v in nutrient_spec_SS[k].keys():
+        if nutrient_spec_SS[k][v]!=WTcompdict[k][v]:
+            mismatch[k].append(v)
+            counter=counter+1
+    print("Mimatches in simulation", k, "=",counter)
 
-# sim_gluc=ss_extractor(StateTracker)
-# counter=0
-# for k in WTcompdict['STATE'].keys():
-#     if sim_gluc[k]!=WTcompdict['STATE'][k]:
-#         print(k)
-# print(counter)
