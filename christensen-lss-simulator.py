@@ -4,7 +4,7 @@ import seaborn as sns
 import numpy as np
 import os 
 PATH=os.getcwd()
-def Transition(PrevState):
+def Transition(PrevState,deletion={}):
     #PrevState['
     NextState={'RGT2':True,
                'YCK1_2':True,
@@ -89,6 +89,9 @@ def Transition(PrevState):
     NextState['Snf1p'] = ( (PrevState['SNF1'] and ( ( (PrevState['SNF4']) ) )    ) and not (PrevState['Glc7Reg1'])) 
     NextState['Snf3p'] = (PrevState['glucose_ext'] and ( ( (PrevState['SNF3'])))) 
     NextState['Std1p'] = (PrevState['STD1'] and not PrevState['Yck1p']) or (PrevState['STD1'] and not PrevState['SCF_grr1']) or (PrevState['STD1'] and not PrevState['Snf3p'] and not PrevState['Rgt2p'])#( ( ( ( (PrevState['STD1']) and not (PrevState['Rgt2p'])) and not (PrevState['SCF_grr1'] )  ) and not (PrevState['Yck1p'])  ) and not (PrevState['Snf3p'] ) )
+    if deletion:
+        for k in deletion.keys():
+            NextState[k]=deletion[k]
     return NextState
 
 def set_initial(modifier_dict):
@@ -242,14 +245,80 @@ NumIter=15
 
 
 FixedRegulators=['RGT2','YCK1_2','GRR1','STD1','RGT1','GLC7','REG1','SNF1','SNF4','MIG1','MALT','GAL2','GAL11','GAL80']
+GeneDeletions=[
+{},
+{'CAT8':False},
+{'GAL1':False},
+{'GAL11':False},
+{'GAL2':False},
+{'GAL3':False},
+{'GAL4':False},
+{'GAL80':False},
+{'GLC7':False},
+{'GRR1':False},
+{'MALR':False},
+{'MALT':False},
+{'MIG1':False},
+{'MIG1':False,'MIG2':False},
+{'MIG2':False},
+{'MIG3':False},
+{'MTH1':False},
+{'REG1':False},
+{'RGT1':False},
+{'RGT2':False},
+{'RGT2':False,'SNF3':False},
+{'SIP4':False},
+{'SNF1':False},
+{'SNF1':False,'SNF4':False},
+{'SNF3':False},
+{'SNF4':False},
+{'STD1':False},
+{'YCK1_2':False}]
+
+
+
+
+
+# ###############################################################
+# ###### Investigate wt-SS predictions for various nutrient inputs
+
+# WTcomp=pd.read_csv(PATH+'/wt-responses.csv',sep='\t',index_col=0)
+
+# WTcompdict=WTcomp.to_dict()
+# MAP={'none':{},
+#      'gal':{'galactose_ext':True},
+#      'glc+mal':{'glucose_ext':True,
+#                 'maltose_ext':True},
+#      'gal+ mal':{'galactose_ext':True,
+#                  'maltose_ext':True},
+#      'mal':{'maltose_ext':True},
+#      'all':{'maltose_ext':True,
+#             'galactose_ext':True,
+#             'glucose_ext':True},
+#      'glc':{'glucose_ext':True},
+#      'glc + gal':{'glucose_ext':True,
+#                   'galactose_ext':True}}
+# mismatch={}
+# nutrient_spec_SS={}
+# for k in MAP.keys():
+#     StateTracker=LSS(set_initial(MAP[k]),NumIter,Transition)
+#     nutrient_spec_SS[k]=ss_extractor(StateTracker)
+#     counter=0
+#     mismatch[k]=[]
+#     for v in nutrient_spec_SS[k].keys():
+#         if nutrient_spec_SS[k][v]!=WTcompdict[k][v]:
+#             mismatch[k].append(v)
+#             counter=counter+1
+#     print("Mimatches in simulation", k, "=",counter)
+# #####################################################################
 
 
 ###############################################################
-###### Investigate wt-SS predictions for various nutrient inputs
+###### Investigate KO-SS predictions for various nutrient inputs
 
-WTcomp=pd.read_csv(PATH+'/wt-responses.csv',sep='\t',index_col=0)
+KOcomparison=pd.read_csv(PATH+'/KO-responses.csv',sep='\t',index_col=0)
 
-WTcompdict=WTcomp.to_dict()
+KOcompdict=KOcomparison.to_dict()
 MAP={'none':{},
      'gal':{'galactose_ext':True},
      'glc+mal':{'glucose_ext':True,
@@ -265,8 +334,9 @@ MAP={'none':{},
                   'galactose_ext':True}}
 mismatch={}
 nutrient_spec_SS={}
+for d in 
 for k in MAP.keys():
-    StateTracker=LSS(set_initial(MAP[k]),NumIter,Transition)
+    StateTracker=LSS(set_initial(MAP[k]),NumIter,Transition,(,))
     nutrient_spec_SS[k]=ss_extractor(StateTracker)
     counter=0
     mismatch[k]=[]
@@ -275,4 +345,4 @@ for k in MAP.keys():
             mismatch[k].append(v)
             counter=counter+1
     print("Mimatches in simulation", k, "=",counter)
-
+#####################################################################
