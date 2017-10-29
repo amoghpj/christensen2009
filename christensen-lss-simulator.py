@@ -374,35 +374,36 @@ GeneDeletions={'wt':{},
 ###############################################################
 
 
-SingleGeneDeletions={#'wt':{},
-    'cat8':{'CAT8':False},
-    'gal1':{'GAL1':False},
-    'gal11':{'GAL11':False},
-    'gal2':{'GAL2':False},
-    'gal3':{'GAL3':False},
-    'gal4':{'GAL4':False},
-    'gal80':{'GAL80':False},
-    'glc7':{'GLC7':False},
-    'grr1':{'GRR1':False},
-    'malR':{'MALR':False},
-    'malT':{'MALT':False},
-    'mig1':{'MIG1':False},
-    'mig2':{'MIG2':False},
-    'mig3':{'MIG3':False},
-    'mth1':{'MTH1':False},
-    'reg1':{'REG1':False},
-    'rgt1':{'RGT1':False},
-    'rgt2':{'RGT2':False},
-    'sip4':{'SIP4':False},
-    'snf1':{'SNF1':False},
-    'snf3':{'SNF3':False},
-    'snf4':{'SNF4':False},
-    'std1':{'STD1':False},
-    'yck1_2':{'YCK1_2':False}
+SingleGeneDeletions={#'wt':[{}},{
+    'cat8':('CAT8',False,'1'),
+    'gal1':('GAL1',False,'2'),
+    'gal11':('GAL11',False,'3'),
+    'gal2':('GAL2',False,'4'),
+    'gal3':('GAL3',False,'5'),
+    'gal4':('GAL4',False,'6'),
+    'gal80':('GAL80',False,'7'),
+    'glc7':('GLC7',False,'8'),
+    'grr1':('GRR1',False,'9'),
+    'malR':('MALR',False,'10'),
+    'malT':('MALT',False,'11'),
+    'mig1':('MIG1',False,'12'),
+    'mig2':('MIG2',False,'13'),
+    'mig3':('MIG3',False,'14'),
+    'mth1':('MTH1',False,'15'),
+    'reg1':('REG1',False,'16'),
+    'rgt1':('RGT1',False,'17'),
+    'rgt2':('RGT2',False,'18'),
+    'sip4':('SIP4',False,'19'),
+    'snf1':('SNF1',False,'20'),
+    'snf3':('SNF3',False,'21'),
+    'snf4':('SNF4',False,'22'),
+    'std1':('STD1',False,'23'),
+    'yck1_2':('YCK1_2',False,'24')
 }
+
 SGD=list(SingleGeneDeletions.keys())
-Readout_states={}
-READOUT='SUC2' # SUC2 readout
+Readout_states=[]
+READOUT_VAR='SUC2' # SUC2 readout
 delstringlist=[]
 MutantName=[]
 # {'total':,'viable':}
@@ -412,46 +413,51 @@ OrderViabilityStats={1:{'total':0,'viable':0},
                      4:{'total':0,'viable':0},
                      5:{'total':0,'viable':0}
 }
+
+count=1
 for j in [1,2,3,4,5]:
     for mutant in tqdm(itertools.combinations(SGD,j)):
+        READOUT={}
         delstring={}
-        name=''
-        for i in range(0,len(mutant)):
+        name=mutant[0] # initialize
+        idstring=SingleGeneDeletions[mutant[0]][2]
+        for i in range(1,len(mutant)):
             name=name+'|'+mutant[i]
+            idstring=idstring+','+SingleGeneDeletions[mutant[i]][2]
         MutantName.append(name)
         for m in mutant:
             M=SingleGeneDeletions[m]
-            Mnamelist=list(M.keys())
-            if len(Mnamelist)>0:
-                Mname=Mnamelist[0]
-                delstring[Mname]=M[Mname]
+            delstring[SingleGeneDeletions[m][0]]=SingleGeneDeletions[m][1]
         delstringlist.append(delstring)
+        
         StateTracker=LSS(set_initial({}),NumIter,Transition,delstring)# Initial condition is starvation
         SS=ss_extractor(StateTracker)
-        Readout_states[name]=SS[READOUT]
+        READOUT['name']=name
+        READOUT['value']=SS[READOUT_VAR]
+        READOUT['id']=idstring
         
         OrderViabilityStats[j]['total']=OrderViabilityStats[j]['total']+1
 
-        if Readout_states[name]==False:
+        if READOUT['value']==True:
             OrderViabilityStats[j]['viable']=OrderViabilityStats[j]['viable']+1
+        Readout_states.append(READOUT)
+        count=count+1
             
 glucRepressionCount=0
 gluNonRepressionCount=0
 
-
-
-for k in Readout_states.keys():
-    if Readout_states[k]==True:
+for R in Readout_states:
+    if R['value']==True:
         gluNonRepressionCount=gluNonRepressionCount+1
     else:
         glucRepressionCount=glucRepressionCount+1
 
 with open('./mutant-predictions-starvation.txt','w') as out: 
-    out.write('#id\tpet_file_id\tname\spec\tviability\n')
+    out.write('#id\tpet_file_id\tname\tspec\tviability\n')
     idnum=1
-    for k in tqdm(Readout_states.keys()):
-        if Readout_states[k]==False: # Conditions are reversed because of starvation simulation
-            out.write(str(idnum)+'\t'+'NA'+'\t'+k+'\t'+'inviable'+'\n')
-        elif Readout_states[k]==True:
-            out.write(str(idnum)+'\t'+'NA'+'\t'+k+'\t'+'viable'+'\n')
+    for R in tqdm(Readout_states):
+        if R['value']==False: # Conditions are reversed because of starvation simulation
+            out.write(str(idnum)+'\t'+'NA'+'\t'+R['name']+'\t'+R['id']+'\t'+'inviable'+'\n')
+        elif R['value']==True:
+            out.write(str(idnum)+'\t'+'NA'+'\t'+R['name']+'\t'+R['id']+'\t'+'viable'+'\n')
         idnum=idnum+1
