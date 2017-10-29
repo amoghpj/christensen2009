@@ -402,15 +402,21 @@ SingleGeneDeletions={'wt':{},
 }
 SGD=list(SingleGeneDeletions.keys())
 Readout_states={}
-READOUT='4orfs'
+READOUT='SUC2'
 delstringlist=[]
+MutantName=[]
 for mutant in tqdm(itertools.combinations(SGD,5)):
     delstring={}
     name=''
     for i in range(0,len(mutant)):
         name=name+mutant[i]
+    MutantName.append(name)
     for m in mutant:
-        delstring[m]=SingleGeneDeletions[m]
+        M=SingleGeneDeletions[m]
+        Mnamelist=list(M.keys())
+        if len(Mnamelist)>0:
+            Mname=Mnamelist[0]
+            delstring[Mname]=M[Mname]
     delstringlist.append(delstring)
     StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition,delstring)
     SS=ss_extractor(StateTracker)
@@ -418,6 +424,9 @@ for mutant in tqdm(itertools.combinations(SGD,5)):
 
 glucRepressionCount=0
 gluNonRepressionCount=0
+
+
+
 for k in Readout_states.keys():
     if Readout_states[k]==True:
         gluNonRepressionCount=gluNonRepressionCount+1
