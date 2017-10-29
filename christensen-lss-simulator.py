@@ -4,6 +4,7 @@ import seaborn as sns
 import numpy as np
 import os 
 import itertools
+import numpy as np
 from tqdm import tqdm
 PATH=os.getcwd()
 def Transition(PrevState,deletion):
@@ -373,7 +374,17 @@ GeneDeletions={'wt':{},
 
 ###############################################################
 
+outputs=['ACS1','FBP1','GAL10','GAL5','GAL7','HXT1','HXT2','HXT3','HXT4','HXT5','HXT8','ICL1','IDP2','JEN1','MALS','MDH2','MEL1','MLS1','PCK1','SFC1','SUC2','CAT2','4orfs']
 
+allgenes=['SNF3','RGT2','YCK1_2','GRR1','MTH1','STD1','RGT1','GLC7','REG1','SNF1','SNF4','MIG1','MIG2','MIG3','MALR','MALT','GAL1','GAL2','GAL3','GAL4','GAL11','GAL80','CAT8','SIP4','SUC2','HXT1','HXT2','HXT3','HXT4','HXT5','HXT8','4orfs','MALS','GAL5','GAL7','GAL10','MEL1','ICL1','FBP1','PCK1','MLS1','MDH2','ACS1','SFC1','CAT2','IDP2','JEN1','Snf3p','Rgt2p','Yck1p','SCF_grr1','Mth1p','Std1p','Rgt1p','Glc7Reg1','Snf1p','Mig1p','Mig2p','Mig3p','MalRp','MalTp','Gal1p','Gal2p','Gal3p','Gal4p','Gal11p','Gal80p','Cat8p','Sip4p']
+regulatorygenes=[]
+
+for i in range(0,len(allgenes)):
+    if allgenes[i] not in outputs:
+        regulatorygenes.append(allgenes[i])
+
+AllSingleGeneDeletions={}
+for i in range()
 SingleGeneDeletions={#'wt':[{}},{
     'cat8':('CAT8',False,'1'),
     'gal1':('GAL1',False,'2'),
