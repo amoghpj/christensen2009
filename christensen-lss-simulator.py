@@ -374,7 +374,7 @@ GeneDeletions={'wt':{},
 ###############################################################
 
 
-SingleGeneDeletions={'wt':{},
+SingleGeneDeletions={#'wt':{},
     'cat8':{'CAT8':False},
     'gal1':{'GAL1':False},
     'gal11':{'GAL11':False},
@@ -402,26 +402,39 @@ SingleGeneDeletions={'wt':{},
 }
 SGD=list(SingleGeneDeletions.keys())
 Readout_states={}
-READOUT='SUC2'
+READOUT='SUC2' # SUC2 readout
 delstringlist=[]
 MutantName=[]
-for mutant in tqdm(itertools.combinations(SGD,5)):
-    delstring={}
-    name=''
-    for i in range(0,len(mutant)):
-        name=name+mutant[i]
-    MutantName.append(name)
-    for m in mutant:
-        M=SingleGeneDeletions[m]
-        Mnamelist=list(M.keys())
-        if len(Mnamelist)>0:
-            Mname=Mnamelist[0]
-            delstring[Mname]=M[Mname]
-    delstringlist.append(delstring)
-    StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition,delstring)
-    SS=ss_extractor(StateTracker)
-    Readout_states[name]=SS[READOUT]
+# {'total':,'viable':}
+OrderViabilityStats={1:{'total':0,'viable':0},
+                     2:{'total':0,'viable':0},
+                     3:{'total':0,'viable':0},
+                     4:{'total':0,'viable':0},
+                     5:{'total':0,'viable':0}
+}
+for j in [1,2,3,4,5]:
+    for mutant in tqdm(itertools.combinations(SGD,j)):
+        delstring={}
+        name=''
+        for i in range(0,len(mutant)):
+            name=name+'|'+mutant[i]
+        MutantName.append(name)
+        for m in mutant:
+            M=SingleGeneDeletions[m]
+            Mnamelist=list(M.keys())
+            if len(Mnamelist)>0:
+                Mname=Mnamelist[0]
+                delstring[Mname]=M[Mname]
+        delstringlist.append(delstring)
+        StateTracker=LSS(set_initial({}),NumIter,Transition,delstring)# Initial condition is starvation
+        SS=ss_extractor(StateTracker)
+        Readout_states[name]=SS[READOUT]
+        
+        OrderViabilityStats[j]['total']=OrderViabilityStats[j]['total']+1
 
+        if Readout_states[name]==False:
+            OrderViabilityStats[j]['viable']=OrderViabilityStats[j]['viable']+1
+            
 glucRepressionCount=0
 gluNonRepressionCount=0
 
@@ -432,3 +445,13 @@ for k in Readout_states.keys():
         gluNonRepressionCount=gluNonRepressionCount+1
     else:
         glucRepressionCount=glucRepressionCount+1
+
+with open('./mutant-predictions-starvation.txt','w') as out: 
+    out.write('#id\tpet_file_id\tname\spec\tviability\n')
+    idnum=1
+    for k in tqdm(Readout_states.keys()):
+        if Readout_states[k]==False: # Conditions are reversed because of starvation simulation
+            out.write(str(idnum)+'\t'+'NA'+'\t'+k+'\t'+'inviable'+'\n')
+        elif Readout_states[k]==True:
+            out.write(str(idnum)+'\t'+'NA'+'\t'+k+'\t'+'viable'+'\n')
+        idnum=idnum+1
