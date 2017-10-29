@@ -3,8 +3,10 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import os 
+import itertools
+from tqdm import tqdm
 PATH=os.getcwd()
-def Transition(PrevState,deletion={}):
+def Transition(PrevState,deletion):
     #PrevState['
     NextState={'RGT2':True,
                'YCK1_2':True,
@@ -189,19 +191,20 @@ def plot_as_heatmap(inputdict):
     plt.show()
 
     
-def LSS(Initial,NumIter,TransFunc):
+def LSS(Initial,NumIter,TransFunc,TransFuncArgs={}):
     States={'glucose_ext':[],'galactose_ext':[],'maltose_ext':[],'galactose_int':[],'maltose_int':[],'SNF3':[],'RGT2':[],'YCK1_2':[],'GRR1':[],'MTH1':[],'STD1':[],'RGT1':[],'GLC7':[],'REG1':[],'SNF1':[],'SNF4':[],'MIG1':[],'MIG2':[],'MIG3':[],'MALR':[],'MALT':[],'GAL1':[],'GAL2':[],'GAL3':[],'GAL4':[],'GAL11':[],'GAL80':[],'CAT8':[],'SIP4':[],'SUC2':[],'HXT1':[],'HXT2':[],'HXT3':[],'HXT4':[],'HXT5':[],'HXT8':[],'4orfs':[],'MALS':[],'GAL5':[],'GAL7':[],'GAL10':[],'MEL1':[],'ICL1':[],'FBP1':[],'PCK1':[],'MLS1':[],'MDH2':[],'ACS1':[],'SFC1':[],'CAT2':[],'IDP2':[],'JEN1':[],'Snf3p':[],'Rgt2p':[],'Yck1p':[],'SCF_grr1':[],'Mth1p':[],'Std1p':[],'Rgt1p':[],'Glc7Reg1':[],'Snf1p':[],'Mig1p':[],'Mig2p':[],'Mig3p':[],'MalRp':[],'MalTp':[],'Gal1p':[],'Gal2p':[],'Gal3p':[],'Gal4p':[],'Gal11p':[],'Gal80p':[],'Cat8p':[],'Sip4p':[]}
     
-    print('Initializing State Tracker...')
+    #print('Initializing State Tracker...')
     for k in States.keys():
         States[k].append(Initial[k])
-    print('Successfully initialized State Tracker.') 
+    #print('Successfully initialized State Tracker.') 
 
     CurrentState=Initial
     NextState={}
-
+    if TransFuncArgs=={}:
+        print('wt simulation')
     for i in range(0,NumIter):
-        NextState=TransFunc(CurrentState)
+        NextState=TransFunc(CurrentState,TransFuncArgs)
         for k in States.keys():
             States[k].append(NextState[k])
         CurrentState=NextState
@@ -245,40 +248,36 @@ NumIter=15
 
 
 FixedRegulators=['RGT2','YCK1_2','GRR1','STD1','RGT1','GLC7','REG1','SNF1','SNF4','MIG1','MALT','GAL2','GAL11','GAL80']
-GeneDeletions=[
-{},
-{'CAT8':False},
-{'GAL1':False},
-{'GAL11':False},
-{'GAL2':False},
-{'GAL3':False},
-{'GAL4':False},
-{'GAL80':False},
-{'GLC7':False},
-{'GRR1':False},
-{'MALR':False},
-{'MALT':False},
-{'MIG1':False},
-{'MIG1':False,'MIG2':False},
-{'MIG2':False},
-{'MIG3':False},
-{'MTH1':False},
-{'REG1':False},
-{'RGT1':False},
-{'RGT2':False},
-{'RGT2':False,'SNF3':False},
-{'SIP4':False},
-{'SNF1':False},
-{'SNF1':False,'SNF4':False},
-{'SNF3':False},
-{'SNF4':False},
-{'STD1':False},
-{'YCK1_2':False}]
-
-
-
-
-
+GeneDeletions={'wt':{},
+    'cat8':{'CAT8':False},
+    'gal1':{'GAL1':False},
+    'gal11':{'GAL11':False},
+    'gal2':{'GAL2':False},
+    'gal3':{'GAL3':False},
+    'gal4':{'GAL4':False},
+    'gal80':{'GAL80':False},
+    'glc7':{'GLC7':False},
+    'grr1':{'GRR1':False},
+    'malR':{'MALR':False},
+    'malT':{'MALT':False},
+    'mig1':{'MIG1':False},
+    'mig1mig2':{'MIG1':False,'MIG2':False},
+    'mig2':{'MIG2':False},
+    'mig3':{'MIG3':False},
+    'mth1':{'MTH1':False},
+    'reg1':{'REG1':False},
+    'rgt1':{'RGT1':False},
+    'rgt2':{'RGT2':False},
+    'rgt2snf3':{'RGT2':False,'SNF3':False},
+    'sip4':{'SIP4':False},
+    'snf1':{'SNF1':False},
+    'snf1snf4':{'SNF1':False,'SNF4':False},
+    'snf3':{'SNF3':False},
+    'snf4':{'SNF4':False},
+    'std1':{'STD1':False},
+    'yck1_2':{'YCK1_2':False}
+}
+                     
 # ###############################################################
 # ###### Investigate wt-SS predictions for various nutrient inputs
 
@@ -309,40 +308,118 @@ GeneDeletions=[
 #         if nutrient_spec_SS[k][v]!=WTcompdict[k][v]:
 #             mismatch[k].append(v)
 #             counter=counter+1
-#     print("Mimatches in simulation", k, "=",counter)
+#     print("Mismatches in simulation", k, "=",counter)
 # #####################################################################
 
 
 ###############################################################
 ###### Investigate KO-SS predictions for various nutrient inputs
+# KOcomparison=pd.read_csv('../KO-responses.tsv',sep='\t',header=None)
+# Delnames=[]
+# for k in GeneDeletions.keys():
+#     Delnames.append(k)
 
-KOcomparison=pd.read_csv(PATH+'/KO-responses.csv',sep='\t',index_col=0)
 
-KOcompdict=KOcomparison.to_dict()
-MAP={'none':{},
-     'gal':{'galactose_ext':True},
-     'glc+mal':{'glucose_ext':True,
-                'maltose_ext':True},
-     'gal+ mal':{'galactose_ext':True,
-                 'maltose_ext':True},
-     'mal':{'maltose_ext':True},
-     'all':{'maltose_ext':True,
-            'galactose_ext':True,
-            'glucose_ext':True},
-     'glc':{'glucose_ext':True},
-     'glc + gal':{'glucose_ext':True,
-                  'galactose_ext':True}}
-mismatch={}
-nutrient_spec_SS={}
-for d in 
-for k in MAP.keys():
-    StateTracker=LSS(set_initial(MAP[k]),NumIter,Transition,(,))
-    nutrient_spec_SS[k]=ss_extractor(StateTracker)
-    counter=0
-    mismatch[k]=[]
-    for v in nutrient_spec_SS[k].keys():
-        if nutrient_spec_SS[k][v]!=WTcompdict[k][v]:
-            mismatch[k].append(v)
-            counter=counter+1
-    print("Mimatches in simulation", k, "=",counter)
-#####################################################################
+# varnamecol=list(KOcomparison[0])
+# Genes=varnamecol[2:-1]
+
+# KOdata={}
+
+# # Construct dictionary from dataframe
+# for c in range(1,225):
+    
+#     coldata=list(KOcomparison[c])
+#     name=str(coldata[0])+':'+str(coldata[1])
+#     expressionvalues=coldata[2:-1]
+#     KOdata[name]={}
+#     KOdata[name]['deletion']=str(coldata[0])
+#     KOdata[name]['medium']=str(coldata[1])
+#     KOdata[name]['expressionstates']={}
+#     for i in range(0,len(expressionvalues)):
+#         if expressionvalues[i]==0:
+#             KOdata[name]['expressionstates'][Genes[i]]=False
+#         elif expressionvalues[i]==1:
+#             KOdata[name]['expressionstates'][Genes[i]]=True
+            
+
+
+# MediumMAP={'none':{},
+#      'gal':{'galactose_ext':True},
+#      'glc+mal':{'glucose_ext':True,
+#                 'maltose_ext':True},
+#      'gal+ mal':{'galactose_ext':True,
+#                  'maltose_ext':True},
+#      'mal':{'maltose_ext':True},
+#      'all':{'maltose_ext':True,
+#             'galactose_ext':True,
+#             'glucose_ext':True},
+#      'glc':{'glucose_ext':True},
+#      'glc + gal':{'glucose_ext':True,
+#                   'galactose_ext':True}}
+# mismatch={}
+# condition_spec_SS={}
+# print("Del: Nut\t\t#Mismatch\n")
+
+# for k in KOdata.keys():
+#     StateTracker=LSS(set_initial(MediumMAP[KOdata[k]['medium']]),NumIter,Transition,GeneDeletions[KOdata[k]['deletion']])
+#     condition_spec_SS[k]=ss_extractor(StateTracker)
+#     conditioncounter=0
+#     mismatch[k]=[]
+#     for v in KOdata[k]['expressionstates'].keys():
+#         if condition_spec_SS[k][v]!=KOdata[k]['expressionstates'][v]:
+#             mismatch[k].append(v)
+#             conditioncounter=conditioncounter+1
+#     print('Mismatches for sim ',k,':',conditioncounter)
+
+###############################################################
+
+
+SingleGeneDeletions={'wt':{},
+    'cat8':{'CAT8':False},
+    'gal1':{'GAL1':False},
+    'gal11':{'GAL11':False},
+    'gal2':{'GAL2':False},
+    'gal3':{'GAL3':False},
+    'gal4':{'GAL4':False},
+    'gal80':{'GAL80':False},
+    'glc7':{'GLC7':False},
+    'grr1':{'GRR1':False},
+    'malR':{'MALR':False},
+    'malT':{'MALT':False},
+    'mig1':{'MIG1':False},
+    'mig2':{'MIG2':False},
+    'mig3':{'MIG3':False},
+    'mth1':{'MTH1':False},
+    'reg1':{'REG1':False},
+    'rgt1':{'RGT1':False},
+    'rgt2':{'RGT2':False},
+    'sip4':{'SIP4':False},
+    'snf1':{'SNF1':False},
+    'snf3':{'SNF3':False},
+    'snf4':{'SNF4':False},
+    'std1':{'STD1':False},
+    'yck1_2':{'YCK1_2':False}
+}
+SGD=list(SingleGeneDeletions.keys())
+Readout_states={}
+READOUT='4orfs'
+delstringlist=[]
+for mutant in tqdm(itertools.combinations(SGD,5)):
+    delstring={}
+    name=''
+    for i in range(0,len(mutant)):
+        name=name+mutant[i]
+    for m in mutant:
+        delstring[m]=SingleGeneDeletions[m]
+    delstringlist.append(delstring)
+    StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition,delstring)
+    SS=ss_extractor(StateTracker)
+    Readout_states[name]=SS[READOUT]
+
+glucRepressionCount=0
+gluNonRepressionCount=0
+for k in Readout_states.keys():
+    if Readout_states[k]==True:
+        gluNonRepressionCount=gluNonRepressionCount+1
+    else:
+        glucRepressionCount=glucRepressionCount+1
