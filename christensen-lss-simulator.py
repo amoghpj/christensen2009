@@ -423,7 +423,7 @@ MutantName=[]
 
 count=1
 MINORDER=1
-MAXORDER=24
+MAXORDER=3
 MutCount=np.arange(MINORDER,MAXORDER+1)
 
 # Initialize stats recorder
@@ -431,6 +431,20 @@ OrderViabilityStats={}
 for i in MutCount:
     OrderViabilityStats[i]={'total':0,'viable':0}
 
+#########################################################################################
+#### VERY IMPORTANT: SUPPLY KEYS AS IN DICTIONARY DEFINITION
+#########################################################################################
+WHAT_SIMULATION={'SUC2':{'starvation':{'initial':{},
+					'viable':True,
+					'inviable':False},
+			'glucose':{'initial':{'glucose_ext':True},
+					'viable':False,
+					'inviable':True}
+			}
+}
+WHICH_GENE='SUC2'
+WHAT_CONDITION='glucose'
+#########################################################################################
 
 cpustats=[]
 for j in MutCount:
@@ -449,7 +463,7 @@ for j in MutCount:
             delstring[SingleGeneDeletions[m][0]]=SingleGeneDeletions[m][1]
         delstringlist.append(delstring)
         
-        StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition,delstring)# Initial condition is starvation
+        StateTracker=LSS(set_initial(WHAT_SIMULATION[WHICH_GENE][WHAT_CONDITION]['initial']),NumIter,Transition,delstring)# Initial condition is starvation/glucose_ext:True
         SS=ss_extractor(StateTracker)
         READOUT['name']=name
         READOUT['value']=SS[READOUT_VAR]
@@ -457,7 +471,7 @@ for j in MutCount:
         
         OrderViabilityStats[j]['total']=OrderViabilityStats[j]['total']+1
 
-        if READOUT['value']==True:
+        if READOUT['value']==WHAT_SIMULATION[WHICH_GENE][WHAT_CONDITION]['viable']:
             OrderViabilityStats[j]['viable']=OrderViabilityStats[j]['viable']+1
         Readout_states.append(READOUT)
         count=count+1
@@ -472,17 +486,17 @@ for R in Readout_states:
     else:
         glucRepressionCount=glucRepressionCount+1
 
-with open('./mutant-combinations-glucose_order_1-24.txt','w') as out: 
+with open('./mutant-info-'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORDER)+'_corrected.txt','w') as out: 
     out.write('#id\tpet_file_id\tname\tspec\tviability\n')
     idnum=1
     for R in tqdm(Readout_states):
-        if R['value']==False: # Conditions are reversed because of starvation simulation
+        if R['value']==WHAT_SIMULATION[WHICH_GENE][WHAT_CONDITION]['inviable']: # Conditions are specified in WHAT_SIMULATION dictionary
             out.write(str(idnum)+'\t'+'NA'+'\t'+R['name']+'\t'+R['id']+'\t'+'inviable'+'\n')
-        elif R['value']==True:
+        elif R['value']==WHAT_SIMULATION[WHICH_GENE][WHAT_CONDITION]['viable']:
             out.write(str(idnum)+'\t'+'NA'+'\t'+R['name']+'\t'+R['id']+'\t'+'viable'+'\n')
         idnum=idnum+1
 
-with open('./statistics_glucose_order_1-24.txt','w') as out:
+with open('./statistics_'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORDER)+'_corrected.txt','w') as out:
     order=MINORDER
     out.write("#Del\tTotal\tViable\t%Viable\tT\tT/D\n")
     for t in cpustats:
