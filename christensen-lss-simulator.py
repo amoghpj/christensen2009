@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
+# import seaborn as sns
 import numpy as np
 import os 
 import itertools
 import numpy as np
 from tqdm import tqdm
+import time
 PATH=os.getcwd()
 def Transition(PrevState,deletion):
     #PrevState['
@@ -383,8 +384,8 @@ for i in range(0,len(allgenes)):
     if allgenes[i] not in outputs:
         regulatorygenes.append(allgenes[i])
 
-AllSingleGeneDeletions={}
-for i in range()
+# AllSingleGeneDeletions={}
+# for i in range()
 SingleGeneDeletions={#'wt':[{}},{
     'cat8':('CAT8',False,'1'),
     'gal1':('GAL1',False,'2'),
@@ -418,15 +419,22 @@ READOUT_VAR='SUC2' # SUC2 readout
 delstringlist=[]
 MutantName=[]
 # {'total':,'viable':}
-OrderViabilityStats={1:{'total':0,'viable':0},
-                     2:{'total':0,'viable':0},
-                     3:{'total':0,'viable':0},
-                     4:{'total':0,'viable':0},
-                     5:{'total':0,'viable':0}
-}
+
 
 count=1
-for j in [1,2,3,4,5]:
+MINORDER=1
+MAXORDER=24
+MutCount=np.arange(MINORDER,MAXORDER+1)
+
+# Initialize stats recorder
+OrderViabilityStats={}
+for i in MutCount:
+    OrderViabilityStats[i]={'total':0,'viable':0}
+
+
+cpustats=[]
+for j in MutCount:
+    start=time.time()
     for mutant in tqdm(itertools.combinations(SGD,j)):
         READOUT={}
         delstring={}
@@ -441,7 +449,7 @@ for j in [1,2,3,4,5]:
             delstring[SingleGeneDeletions[m][0]]=SingleGeneDeletions[m][1]
         delstringlist.append(delstring)
         
-        StateTracker=LSS(set_initial({}),NumIter,Transition,delstring)# Initial condition is starvation
+        StateTracker=LSS(set_initial({'glucose_ext':True}),NumIter,Transition,delstring)# Initial condition is starvation
         SS=ss_extractor(StateTracker)
         READOUT['name']=name
         READOUT['value']=SS[READOUT_VAR]
@@ -453,6 +461,7 @@ for j in [1,2,3,4,5]:
             OrderViabilityStats[j]['viable']=OrderViabilityStats[j]['viable']+1
         Readout_states.append(READOUT)
         count=count+1
+    cpustats.append(time.time()-start)
             
 glucRepressionCount=0
 gluNonRepressionCount=0
@@ -463,7 +472,7 @@ for R in Readout_states:
     else:
         glucRepressionCount=glucRepressionCount+1
 
-with open('./mutant-predictions-starvation.txt','w') as out: 
+with open('./mutant-combinations-glucose_order_1-24.txt','w') as out: 
     out.write('#id\tpet_file_id\tname\tspec\tviability\n')
     idnum=1
     for R in tqdm(Readout_states):
@@ -472,3 +481,12 @@ with open('./mutant-predictions-starvation.txt','w') as out:
         elif R['value']==True:
             out.write(str(idnum)+'\t'+'NA'+'\t'+R['name']+'\t'+R['id']+'\t'+'viable'+'\n')
         idnum=idnum+1
+
+with open('./statistics_glucose_order_1-24.txt','w') as out:
+    order=MINORDER
+    out.write("#Del\tTotal\tViable\t%Viable\tT\tT/D\n")
+    for t in cpustats:
+        out.write(str(order)+'\t'+str(OrderViabilityStats[order]['total'])+'\t'+str(OrderViabilityStats[order]['viable'])+'\t'+str(round(100*OrderViabilityStats[order]['viable']/OrderViabilityStats[order]['total'],2))+'\t'+str(round(t,5))+'\t'+str(round(float(t)/float(OrderViabilityStats[order]['total']),5))+'\n')
+        order=order+1
+                  
+    
