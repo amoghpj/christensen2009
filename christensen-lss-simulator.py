@@ -386,34 +386,34 @@ for i in range(0,len(allgenes)):
 
 # AllSingleGeneDeletions={}
 # for i in range()
-SingleGeneDeletions={#'wt':[{}},{
-    'cat8':('CAT8',False,'1'),
-    'gal1':('GAL1',False,'2'),
-    'gal11':('GAL11',False,'3'),
-    'gal2':('GAL2',False,'4'),
-    'gal3':('GAL3',False,'5'),
-    'gal4':('GAL4',False,'6'),
-    'gal80':('GAL80',False,'7'),
-    'glc7':('GLC7',False,'8'),
-    'grr1':('GRR1',False,'9'),
-    'malR':('MALR',False,'10'),
-    'malT':('MALT',False,'11'),
-    'mig1':('MIG1',False,'12'),
-    'mig2':('MIG2',False,'13'),
-    'mig3':('MIG3',False,'14'),
-    'mth1':('MTH1',False,'15'),
-    'reg1':('REG1',False,'16'),
-    'rgt1':('RGT1',False,'17'),
-    'rgt2':('RGT2',False,'18'),
-    'sip4':('SIP4',False,'19'),
-    'snf1':('SNF1',False,'20'),
-    'snf3':('SNF3',False,'21'),
-    'snf4':('SNF4',False,'22'),
-    'std1':('STD1',False,'23'),
-    'yck1_2':('YCK1_2',False,'24')
+SingleGeneProteinDeletions={#'wt':[{}},{i                             
+    'cat8':(['CAT8','Cat8p'],False,'1'),                              
+    'gal1':(['GAL1','Gal1p'],False,'2'),                              
+    'gal11':(['GAL11','Gal11p'],False,'3'),                           
+    'gal2':(['GAL2','Gal2p'],False,'4'),                              
+    'gal3':(['GAL3','Gal3p'],False,'5'),                              
+    'gal4':(['GAL4','Gal4p'],False,'6'),                              
+    'gal80':(['GAL80','Gal80p'],False,'7'),                           
+    'glc7':(['GLC7','Glc7Reg1'],False,'8'),                           
+    'grr1':(['GRR1','SCF_grr1'],False,'9'),                           
+    'malR':(['MALR','MalRp'],False,'10'),                             
+    'malT':(['MALT','MalTp'],False,'11'),                             
+    'mig1':(['MIG1','Mig1p'],False,'12'),                             
+    'mig2':(['MIG2','Mig2p'],False,'13'),                             
+    'mig3':(['MIG3','Mig3p'],False,'14'),                             
+    'mth1':(['MTH1','Mth1p'],False,'15'),                             
+    'reg1':(['REG1','Gllc7Reg1'],False,'16'),                         
+    'rgt1':(['RGT1','Rgt1p'],False,'17'),                             
+    'rgt2':(['RGT2','Rgt2p'],False,'18'),                             
+    'sip4':(['SIP4','Sip4p'],False,'19'),                             
+    'snf1':(['SNF1','Snf1p'],False,'20'),                             
+    'snf3':(['SNF3','Snf3p'],False,'21'),
+    'snf4':(['SNF4'],False,'22'),
+    'std1':(['STD1','Std1p'],False,'23'),
+    'yck1_2':(['YCK1_2','Yck1p'],False,'24')
 }
 
-SGD=list(SingleGeneDeletions.keys())
+SGD=list(SingleGeneProteinDeletions.keys())
 Readout_states=[]
 READOUT_VAR='SUC2' # SUC2 readout
 delstringlist=[]
@@ -423,7 +423,7 @@ MutantName=[]
 
 count=1
 MINORDER=1
-MAXORDER=3
+MAXORDER=12
 MutCount=np.arange(MINORDER,MAXORDER+1)
 
 # Initialize stats recorder
@@ -435,17 +435,25 @@ for i in MutCount:
 #### VERY IMPORTANT: SUPPLY KEYS AS IN DICTIONARY DEFINITION
 #########################################################################################
 WHAT_SIMULATION={'SUC2':{'starvation':{'initial':{},
-					'viable':True,
-					'inviable':False},
-			'glucose':{'initial':{'glucose_ext':True},
-					'viable':False,
-					'inviable':True}
-			}
+				       'viable':True,
+				       'inviable':False},
+			 'glucose':{'initial':{'glucose_ext':True},
+				    'viable':False,
+                                    'inviable':True},
+                         'glc+gal':{'initial':{'glucose_ext':True,
+                                               'galactose_ext':True},
+                                      'viable':False,
+                                      'inviable':True},
+                         'glc+mal':{'initial':{'glucose_ext':True,
+                                               'maltose_ext':True},
+                                      'viable':False,
+                                      'inviable':True}}
 }
 WHICH_GENE='SUC2'
-WHAT_CONDITION='glucose'
+WHAT_CONDITION='starvation'
 #########################################################################################
-
+print("Simulating "+str(WHAT_CONDITION)+" using "+WHICH_GENE)
+print("SImulation range=["+str(MINORDER)+","+str(MAXORDER)+"]")
 cpustats=[]
 for j in MutCount:
     start=time.time()
@@ -453,14 +461,15 @@ for j in MutCount:
         READOUT={}
         delstring={}
         name=mutant[0] # initialize
-        idstring=SingleGeneDeletions[mutant[0]][2]
+        idstring=SingleGeneProteinDeletions[mutant[0]][2]
         for i in range(1,len(mutant)):
             name=name+'|'+mutant[i]
-            idstring=idstring+','+SingleGeneDeletions[mutant[i]][2]
+            idstring=idstring+','+SingleGeneProteinDeletions[mutant[i]][2]
         MutantName.append(name)
         for m in mutant:
-            M=SingleGeneDeletions[m]
-            delstring[SingleGeneDeletions[m][0]]=SingleGeneDeletions[m][1]
+            M=SingleGeneProteinDeletions[m]
+            for geneprotein in M[0]: # SingleGeneDeletions['delname']:(['list','of','variables'],True/False,ID)
+                delstring[geneprotein]=M[1]
         delstringlist.append(delstring)
         
         StateTracker=LSS(set_initial(WHAT_SIMULATION[WHICH_GENE][WHAT_CONDITION]['initial']),NumIter,Transition,delstring)# Initial condition is starvation/glucose_ext:True
@@ -486,7 +495,7 @@ for R in Readout_states:
     else:
         glucRepressionCount=glucRepressionCount+1
 
-with open('./mutant-info-'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORDER)+'_corrected.txt','w') as out: 
+with open('./mutant-info-'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORDER)+'_gene_protein.txt','w') as out: 
     out.write('#id\tpet_file_id\tname\tspec\tviability\n')
     idnum=1
     for R in tqdm(Readout_states):
@@ -496,7 +505,7 @@ with open('./mutant-info-'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORD
             out.write(str(idnum)+'\t'+'NA'+'\t'+R['name']+'\t'+R['id']+'\t'+'viable'+'\n')
         idnum=idnum+1
 
-with open('./statistics_'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORDER)+'_corrected.txt','w') as out:
+with open('./statistics_'+WHAT_CONDITION+'_order-'+str(MINORDER)+'-'+str(MAXORDER)+'_gene_protein.txt','w') as out:
     order=MINORDER
     out.write("#Del\tTotal\tViable\t%Viable\tT\tT/D\n")
     for t in cpustats:
